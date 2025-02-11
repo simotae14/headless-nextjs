@@ -6,13 +6,19 @@ export const metadata = {
 import Link from 'next/link'
 import Image from 'next/image'
 import Illustration from '@/public/images/page-illustration.svg'
-import CustomerBadge from '@/public/images/customer-badge.svg'
+import { Document } from '@contentful/rich-text-types'
 import Particles from '@/components/particles'
 import RelatedPosts from './related-posts'
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer'
-import { getContentForCustomerPost } from '@/content/queries'
+import { getContentForCustomerPost, getSlugsForPosts } from '@/content/queries'
 
-export default async function CustomerSingle({ params }) {
+export async function generateStaticParams() {
+  const data = await getSlugsForPosts();
+
+  return data.customerPostCollection.items;
+}
+
+export default async function CustomerSingle({ params }: { params: { slug: string } }) {
   const data = await getContentForCustomerPost(params.slug);
   const content = data.customerPostCollection.items[0];
   return (
@@ -60,7 +66,7 @@ export default async function CustomerSingle({ params }) {
 
                   {/* Post content */}
                   <div className="prose max-w-none text-slate-400 prose-headings:text-slate-50 prose-h2:text-xl prose-h2:mt-8 prose-h2:mb-4 prose-p:leading-relaxed prose-a:text-purple-500 prose-a:no-underline hover:prose-a:underline prose-strong:text-slate-50 prose-strong:font-medium prose-blockquote:pl-5 prose-blockquote:xl:-ml-5 prose-blockquote:border-l-2 prose-blockquote:border-purple-500 prose-blockquote:font-medium prose-blockquote:text-slate-300 prose-blockquote:italic">
-                    {documentToReactComponents(content.body.json)}
+                    {documentToReactComponents((content.body.json as unknown) as Document)}
                   </div>
                 </article>
 
@@ -81,7 +87,7 @@ export default async function CustomerSingle({ params }) {
                     <div className="px-5 py-6">
                       <div className="mb-5">
                         <div className="flex items-center space-x-4">
-                          <Image src={CustomerBadge} width={64} height={64} alt="Customer badge" />
+                          <Image src={content.customer.logo.url} width={content.customer.logo.width} height={content.customer.logo.height} alt={content.customer.logo.title} />
                           <div className="text-lg font-semibold text-slate-100">{content.customer.name}</div>
                         </div>
                       </div>
